@@ -24,6 +24,7 @@ class TrainingConfig:
 	train_val_split: float = 0.2
 	seed: int = 42
 	num_labels: int = 2
+	class_weights: tuple[float, float] = (1.0, 4.8)
 	text_col: str = "text"
 	label_col: str = "label"
     train_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_train.csv"

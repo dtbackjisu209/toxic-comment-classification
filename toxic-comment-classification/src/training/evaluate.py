@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 
 
 @torch.no_grad()
-def evaluate_model(model, dataloader, device: torch.device) -> Dict[str, float]:
+def evaluate_model(model, dataloader, device: torch.device, criterion: Optional[torch.nn.Module] = None) -> Dict[str, float]:
 	model.eval()
 	all_predictions: List[int] = []
 	all_labels: List[int] = []
@@ -20,9 +20,12 @@ def evaluate_model(model, dataloader, device: torch.device) -> Dict[str, float]:
 	for batch in dataloader:
 		batch = {key: value.to(device) for key, value in batch.items()}
 		labels = batch.pop("labels")
-		outputs = model(**batch, labels=labels)
-		loss = outputs["loss"]
+		outputs = model(**batch)
 		logits = outputs["logits"]
+		if criterion is not None:
+			loss = criterion(logits, labels)
+		else:
+			loss = outputs.get("loss")
 
 		total_loss += float(loss.item()) if loss is not None else 0.0
 		total_batches += 1
