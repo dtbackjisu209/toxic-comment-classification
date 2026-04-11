@@ -20,7 +20,12 @@ def infer_label(value: object) -> int:
 		return int(value)
 
 	if isinstance(value, (int, float)):
-		return int(value > 0)
+		numeric_value = int(value)
+		if numeric_value == 0:
+			return 0
+		if numeric_value in {1, 2}:
+			return 1
+		raise ValueError(f"Unsupported numeric label: {value!r}. Expected one of 0, 1, 2.")
 
 	normalized = str(value).strip().lower()
 	positive_values = {"1", "true", "toxic", "tox", "yes", "y", "abusive", "offensive", "hate"}
@@ -32,7 +37,12 @@ def infer_label(value: object) -> int:
 		return 0
 
 	try:
-		return int(float(normalized) > 0)
+		numeric_value = int(float(normalized))
+		if numeric_value == 0:
+			return 0
+		if numeric_value in {1, 2}:
+			return 1
+		raise ValueError(f"Unsupported numeric label: {value!r}. Expected one of 0, 1, 2.")
 	except ValueError as exc:
 		raise ValueError(f"Cannot infer label from value: {value!r}") from exc
 
