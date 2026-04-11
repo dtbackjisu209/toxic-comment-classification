@@ -26,6 +26,9 @@ class TrainingConfig:
 	num_labels: int = 2
 	text_col: str = "text"
 	label_col: str = "label"
+	train_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_train.csv"
+    val_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_valid.csv"
+    test_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_test.csv"
 	output_dir: Path = field(default_factory=lambda: Path("outputs"))
 	checkpoint_dir: Path = field(default_factory=lambda: Path("outputs") / "checkpoints")
 	log_dir: Path = field(default_factory=lambda: Path("outputs") / "logs")
