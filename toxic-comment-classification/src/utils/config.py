@@ -26,7 +26,7 @@ class TrainingConfig:
 	class_weights: tuple[float, float] = (1.0, 4.8)
 	text_col: str = "text"
 	label_col: str = "label"
-    train_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_train.csv"
+    train_path: str = "/content/drive/MyDrive/DataSonLamViHSD/ViCTSD_train.csv"
     val_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_valid.csv"
     test_path: str = "/content/drive/MyDrive/ViCTSD/ViCTSD_test.csv"
     output_dir: Path = field(default_factory=lambda: Path("/content/drive/MyDrive/toxic_outputs"))
