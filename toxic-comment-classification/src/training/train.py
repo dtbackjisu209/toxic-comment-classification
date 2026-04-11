@@ -40,7 +40,7 @@ def build_dataset_from_frame(frame: pd.DataFrame, tokenizer, config: TrainingCon
 	)
 
 
-def train_one_epoch(model, dataloader, optimizer, scheduler, device) -> float:
+def train_one_epoch(model, dataloader, optimizer, scheduler, criterion, device) -> float:
 	model.train()
 	total_loss = 0.0
 	total_batches = 0
@@ -51,8 +51,9 @@ def train_one_epoch(model, dataloader, optimizer, scheduler, device) -> float:
 		labels = batch.pop("labels")
 
 		optimizer.zero_grad(set_to_none=True)
-		outputs = model(**batch, labels=labels)
-		loss = outputs["loss"]
+		outputs = model(**batch)
+		logits = outputs["logits"]
+		loss = criterion(logits, labels)
 		loss.backward()
 		torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 		optimizer.step()
@@ -159,6 +160,8 @@ def main() -> None:
 
 	model = PhoBertClassifier(model_name=config.model_name, num_labels=config.num_labels)
 	model.to(device)
+	class_weights = torch.tensor(config.class_weights, dtype=torch.float32, device=device)
+	criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
 
 	optimizer = AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 	total_steps = len(train_loader) * config.epochs
@@ -171,10 +174,11 @@ def main() -> None:
 
 	best_f1 = -1.0
 	best_metrics = {}
+	print(f"Using class weights: {list(config.class_weights)}")
 
 	for epoch in range(1, config.epochs + 1):
-		train_loss = train_one_epoch(model, train_loader, optimizer, scheduler, device)
-		val_metrics = evaluate_model(model, val_loader, device)
+		train_loss = train_one_epoch(model, train_loader, optimizer, scheduler, criterion, device)
+		val_metrics = evaluate_model(model, val_loader, device, criterion=criterion)
 		current_f1 = val_metrics["f1"]
 
 		epoch_metrics = {
@@ -204,7 +208,7 @@ def main() -> None:
 		json.dump(best_metrics, handle, ensure_ascii=False, indent=2)
 
 	if test_loader is not None:
-		test_metrics = evaluate_model(model, test_loader, device)
+		test_metrics = evaluate_model(model, test_loader, device, criterion=criterion)
 		with (config.log_dir / "test_metrics.json").open("w", encoding="utf-8") as handle:
 			json.dump(test_metrics, handle, ensure_ascii=False, indent=2)
 		print(
