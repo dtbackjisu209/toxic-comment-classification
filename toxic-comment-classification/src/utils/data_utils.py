@@ -9,8 +9,8 @@ import pandas as pd
 from src.dataset.dataset import infer_label
 
 
-TEXT_COLUMN_ALIASES = ("comment", "text", "content", "sentence", "review")
-LABEL_COLUMN_ALIASES = ("toxicity", "label", "target", "class", "y")
+TEXT_COLUMN_ALIASES = ("comment", "text", "content", "sentence", "review", "free_text")
+LABEL_COLUMN_ALIASES = ("toxicity", "label", "target", "class", "y", "label_id")
 
 
 def resolve_column_name(frame: pd.DataFrame, preferred_name: str, aliases: tuple[str, ...]) -> str:
