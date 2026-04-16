@@ -201,19 +201,31 @@ def main() -> None:
 
 		print(
 			f"Epoch {epoch}/{config.epochs} | train_loss={train_loss:.4f} | "
-			f"val_loss={val_metrics['loss']:.4f} | val_f1={val_metrics['f1']:.4f}"
+			f"val_loss={val_metrics['loss']:.4f} | val_acc={val_metrics['accuracy']:.4f} | "
+			f"val_precision={val_metrics['precision']:.4f} | val_recall={val_metrics['recall']:.4f} | "
+			f"val_f1={val_metrics['f1']:.4f}"
 		)
 
 	with config.metrics_path.open("w", encoding="utf-8") as handle:
 		json.dump(best_metrics, handle, ensure_ascii=False, indent=2)
 
 	if test_loader is not None:
-		test_metrics = evaluate_model(model, test_loader, device, criterion=criterion)
+		# Report test metrics from the best validation checkpoint, not the last epoch model.
+		best_model = PhoBertClassifier.from_pretrained(config.best_model_dir, map_location=device)
+		best_model.to(device)
+		test_metrics = evaluate_model(best_model, test_loader, device, criterion=criterion)
+
+		test_report = {
+			"evaluated_checkpoint": str(config.best_model_dir),
+			"best_val_metrics": best_metrics,
+			"test_metrics": test_metrics,
+		}
 		with (config.log_dir / "test_metrics.json").open("w", encoding="utf-8") as handle:
-			json.dump(test_metrics, handle, ensure_ascii=False, indent=2)
+			json.dump(test_report, handle, ensure_ascii=False, indent=2)
 		print(
-			f"Test metrics | loss={test_metrics['loss']:.4f} | acc={test_metrics['accuracy']:.4f} | "
-			f"f1={test_metrics['f1']:.4f}"
+			f"Test metrics (best checkpoint) | loss={test_metrics['loss']:.4f} | "
+			f"acc={test_metrics['accuracy']:.4f} | precision={test_metrics['precision']:.4f} | "
+			f"recall={test_metrics['recall']:.4f} | f1={test_metrics['f1']:.4f}"
 		)
 
 	print(f"Best model saved to: {config.best_model_dir}")
